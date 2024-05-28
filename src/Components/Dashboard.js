@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, FormGroup ,Image } from 'react-bootstrap';
+import { Button,Image } from 'react-bootstrap';
 import {useState} from 'react';
 import axios from "axios";
 import { BASE_URL } from "./helper";
@@ -10,17 +10,21 @@ import Card from './Card';
 function Dashboard() {
     const navigate=useNavigate();
     const [flag,setflag]=useState(false);
+    const [email,setemail]=useState("");
     const [name,setname]=useState("");
     const [data,setdata]=useState([]);
     const [flag3,setflag3]=useState(true);
-    const [comment,setcomment]=useState("");
     const [tdata,settdata]=useState({
+        email:"",
         name:"",
         Para:"",
         ImageLink:""
 });
     const handleDelete = async(name) => {
-       axios.delete(BASE_URL + "/delete/" + name).then((res)=>{
+      tdata.email=email;
+      tdata.name=name;
+      setflag(false);
+       axios.post(BASE_URL + "/delete" ,tdata).then((res)=>{
         window.location.reload();
        })
     }
@@ -29,8 +33,12 @@ function Dashboard() {
         setflag3(false);
     }
     const adddata1=async(e)=>{
+      e.preventDefault();
+        tdata.email=email;
         setflag3(false);
-        axios.post(BASE_URL + "/enterdata",tdata).then((res)=>{
+        setflag(false);
+        axios.post(BASE_URL + "/Allblogs",tdata).then((res)=>{
+          window.location.reload();
         })
     }
     const handleSubmit = async (e) => {
@@ -47,13 +55,12 @@ function Dashboard() {
             navigate("/login");  
           }
           else {
-            if(localStorage.getItem('token1')==="venkatsai.bandi2019@gmail.com") {
-                setflag(true);
-            }
+            setemail(localStorage.getItem('token1'));
             setname(localStorage.getItem('token'));
-                if(data.length===0) {axios.get(BASE_URL + "/getdata/venkatsai.bandi2019@gmail.com").then((res)=>{
+                if(data.length===0) {axios.get(BASE_URL + "/getdata").then((res)=>{
                     console.log(res.data.data);
                     setdata(res.data.data);
+                    setflag(true);
                 })}
           }
         }
@@ -66,15 +73,15 @@ function Dashboard() {
       }
   return (
     <>
-    <div className='container align-items-center justify-content-center mt-2'>
+    <div className='container align-items-center justify-content-center'>
         <h3>Hello {name}</h3>
-        <Image src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTiOD8KprvrSYBZlDAATNG-rVDLWG6BaVehQ&usqp=CAU"></Image>
-        <div className='box border border-dark p-1'>
-           <div>{flag && (<Button className='m-3' onClick={adddata}>Add Post</Button>)}
-           <Button className='m-3' draggable = "true" variant='primary' onClick={handlelogout}>Log out</Button></div>
-           {flag3 && (<Card animals={data} handleDelete={handleDelete} flag={flag}/>)}
+        <Image className='rounded-5' src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTiOD8KprvrSYBZlDAATNG-rVDLWG6BaVehQ&usqp=CAU"></Image>
+        {!flag && <div className='text-success'>Loading posts please wait...</div>}
+        {flag && <div className='box border border-dark p-1 rounded-4' >
+           <div><Button className='m-3' onClick={adddata}>Add Post</Button><Button className='m-3' draggable = "true" variant='primary' onClick={handlelogout}>Log out</Button></div>
+           {flag3 && (<Card animals={data} handleDelete={handleDelete} email={email} pname={name} flag={flag} setflag={setflag}/>)}
            {!flag3 && (<div className='m-5'>
-            <Form onSubmit={adddata1}>
+            <Form onSubmit={adddata1} >
             <Form.Group className="mb-3" controlId="formBasicEmail">
               <Form.Control
                 type="text"
@@ -114,7 +121,7 @@ function Dashboard() {
             </div>
           </Form>
             </div>)}
-        </div>
+        </div>}
     </div>
     </>
   )
